@@ -9,13 +9,14 @@ pub mod bindings;
 use sensor::Sensor;
 use std::collections::HashMap;
 
+#[derive(Default)]
 pub struct SensorsDB {
     database: HashMap<u32, Sensor>,
 }
 
 impl SensorsDB {
     pub fn new() -> Self {
-        SensorsDB { database: HashMap::new() }
+        SensorsDB::default()
     }
 
     pub fn get_sensor(&self, ip: u32) -> Option<&Sensor> {
