@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/Bigomby/dsensorsdb.svg?style=svg&circle-token=8f0f5038423ff7b2a8e43a5a1d19713a937fd449)](https://circleci.com/gh/Bigomby/dsensorsdb)
+
 # Dynamic Sensors Database
 
 ## Overview
