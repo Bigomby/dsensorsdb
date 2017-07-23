@@ -44,11 +44,16 @@ pub extern "C" fn sensor_get_observation_id(sensor_ptr: *const Sensor,
 
 #[no_mangle]
 pub extern "C" fn sensor_get_worker(sensor_ptr: *const Sensor) -> *mut c_void {
-    unimplemented!()
+    let sensor = unsafe {
+        assert!(!sensor_ptr.is_null());
+        &*sensor_ptr
+    };
+
+    sensor.get_worker().expect("No worker associated to the sensor")
 }
 
 #[no_mangle]
-pub extern "C" fn sensor_set_worker(sensor_ptr: *mut Sensor, worker: *const c_void) {
+pub extern "C" fn sensor_set_worker(sensor_ptr: *mut Sensor, worker: *mut c_void) {
     let sensor = unsafe {
         assert!(!sensor_ptr.is_null());
         &mut *sensor_ptr

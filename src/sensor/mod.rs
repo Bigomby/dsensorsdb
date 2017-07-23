@@ -8,7 +8,7 @@ use libc::c_void;
 pub struct Sensor {
     address: IpAddr,
     str_address: String,
-    worker: Option<*const c_void>,
+    worker: Option<*mut c_void>,
     observations_id: HashMap<u32, ObservationID>,
 }
 
@@ -30,11 +30,15 @@ impl Sensor {
         &self.str_address
     }
 
+    pub fn get_worker(&self) -> Option<*mut c_void> {
+        self.worker
+    }
+
     fn get_observation_id(&self, id: u32) -> Option<&ObservationID> {
         self.observations_id.get(&id)
     }
 
-    pub fn set_worker(&mut self, worker: *const c_void) {
+    pub fn set_worker(&mut self, worker: *mut c_void) {
         self.worker = Some(worker);
     }
 
