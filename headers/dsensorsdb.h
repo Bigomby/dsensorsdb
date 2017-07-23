@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 typedef struct net_address_s {
-  uint8_t network_address[16];
+  uint8_t network[16];
   uint8_t network_mask[16];
   uint8_t broadcast[16];
 } net_address_t;
@@ -13,6 +13,7 @@ typedef struct net_address_s {
 typedef struct sensor_s sensor_t;
 typedef struct sensors_db_s sensors_db_t;
 typedef struct observation_id_s observation_id_t;
+typedef struct network_s network_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Sensors DB
@@ -80,6 +81,13 @@ net_address_t sensor_get_address(const sensor_t *sensor);
 const char *sensor_get_ip_string(const sensor_t *sensor);
 
 /**
+ * [sensor_get_ip description]
+ * @param  sensor [description]
+ * @return        [description]
+ */
+uint32_t sensor_get_ip(const sensor_t *sensor);
+
+/**
  * [sensor_get_observation_id description]
  * @param  sensor [description]
  * @param  id     [description]
@@ -95,9 +103,41 @@ observation_id_t *sensor_get_observation_id(const sensor_t *sensor,
  */
 void *sensor_get_worker(const sensor_t *sensor);
 
+/**
+ * [sensor_set_worker description]
+ * @param sensor [description]
+ * @param worker [description]
+ */
+void sensor_set_worker(sensor_t *sensor, void *worker);
+
+/**
+ * [sensor_add_observation_id description]
+ * @param sensor         [description]
+ * @param id             [description]
+ * @param observation_id [description]
+ */
+void sensor_add_observation_id(sensor_t *sensor, uint32_t id,
+                               observation_id_t *observation_id);
+
+/**
+ * [sensor_add_default_observation_id description]
+ * @param sensor         [description]
+ * @param id             [description]
+ * @param observation_id [description]
+ */
+void sensor_add_default_observation_id(sensor_t *sensor, uint32_t id,
+                                       observation_id_t *observation_id);
+
 ////////////////////////////////////////////////////////////////////////////////
 // Observation ID
 ////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * [observation_id_new description]
+ * @param  id [description]
+ * @return    [description]
+ */
+observation_id_t *observation_id_new(uint32_t id);
 
 /**
  * [observation_id_get_network_ip description]
@@ -161,8 +201,8 @@ observation_id_get_interface_description(const observation_id_t *observation_id,
  * @param  obs_id [description]
  * @return        [description]
  */
-int64_t
-observation_id_get_fallback_first_switch(const observation_id_t *obs_id);
+int64_t observation_id_get_fallback_first_switch(
+    const observation_id_t *observation_id);
 
 /**
  * [observation_id_get_template description]
@@ -204,6 +244,21 @@ bool observation_id_want_client_dns(const observation_id_t *observation_id);
  * @return                [description]
  */
 bool observation_id_want_target_dns(const observation_id_t *observation_id);
+
+/**
+ * [observation_id_is_exporter_in_wan_side description]
+ * @param  observation_id [description]
+ * @return                [description]
+ */
+bool observation_id_is_exporter_in_wan_side(
+    const observation_id_t *observation_id);
+
+/**
+ * [observation_id_is_span description]
+ * @param  observation_id [description]
+ * @return                [description]
+ */
+bool observation_id_is_span(const observation_id_t *observation_id);
 
 /**
 * [observation_id_add_template description]
@@ -262,16 +317,51 @@ void observation_id_add_interface(observation_id_t *observation_id,
                                   size_t interface_description_len);
 
 /**
- * [observation_id_is_exporter_in_wan_side description]
- * @param  observation_id [description]
- * @return                [description]
+ * [observation_id_set_enrichment description]
+ * @param observation_id [description]
+ * @param enrichment     [description]
  */
-bool observation_id_is_exporter_in_wan_side(
-    const observation_id_t *observation_id);
+void observation_id_set_enrichment(const observation_id_t *observation_id,
+                                   const char *enrichment);
 
 /**
- * [observation_id_is_span description]
- * @param  observation_id [description]
- * @return                [description]
+ * [observation_id_set_fallback_first_switch description]
+ * @param observation_id [description]
+ * @param first_switch   [description]
  */
-bool observation_id_is_span(const observation_id_t *observation_id);
+void observation_id_set_fallback_first_switch(observation_id_t *observation_id,
+                                              int64_t fallback_first_switch);
+
+/**
+ * [observation_id_set_exporter_in_wan_side description]
+ * @param observation_id [description]
+ */
+void observation_id_set_exporter_in_wan_side(observation_id_t *observation_id);
+
+/**
+ * [observation_id_set_span_mode description]
+ * @param observation_id [description]
+ */
+void observation_id_set_span_mode(observation_id_t *observation_id);
+
+/**
+ * [observation_id_enable_ptr_dns_client description]
+ * @param observation_id [description]
+ */
+void observation_id_enable_ptr_dns_client(observation_id_t *observation_id);
+
+/**
+ * [observation_id_enable_ptr_dns_client description]
+ * @param observation_id [description]
+ */
+void observation_id_enable_ptr_dns_target(observation_id_t *observation_id);
+
+////////////////////////////////////////////////////////////////////////////////
+// Network
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * [network_new description]
+ * @return [description]
+ */
+network_t *network_new(net_address_t address, const char *name);

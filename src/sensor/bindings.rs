@@ -25,6 +25,11 @@ pub extern "C" fn sensor_get_ip_string(sensor_ptr: *const Sensor) -> *const c_ch
 }
 
 #[no_mangle]
+pub extern "C" fn sensor_get_ip(sensor_ptr: *const Sensor) -> u32 {
+    unimplemented!()
+}
+
+#[no_mangle]
 pub extern "C" fn sensor_get_observation_id(sensor_ptr: *const Sensor,
                                             id: u32)
                                             -> *mut ObservationID {
@@ -33,5 +38,24 @@ pub extern "C" fn sensor_get_observation_id(sensor_ptr: *const Sensor,
 
 #[no_mangle]
 pub extern "C" fn sensor_get_worker(sensor_ptr: *const Sensor) -> *mut c_void {
+    unimplemented!()
+}
+
+#[no_mangle]
+pub extern "C" fn sensor_set_worker(sensor_ptr: *const Sensor, worker: *mut c_void) {
+    unimplemented!()
+}
+
+#[no_mangle]
+pub extern "C" fn sensor_add_observation_id(sensor_ptr: *const Sensor,
+                                            id: u32,
+                                            observation_id: *mut ObservationID) {
+    unimplemented!()
+}
+
+#[no_mangle]
+pub extern "C" fn sensor_add_default_observation_id(sensor_ptr: *const Sensor,
+                                                    id: u32,
+                                                    observation_id: *mut ObservationID) {
     unimplemented!()
 }

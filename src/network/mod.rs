@@ -1,7 +1,9 @@
+pub mod bindings;
+
 pub type IPAddress = [u8; 16];
 
 #[repr(C)]
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Debug, Default)]
 pub struct NetAddress {
     network_address: IPAddress,
     network_mask: IPAddress,

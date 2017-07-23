@@ -3,6 +3,11 @@ use observation_id::ObservationID;
 use libc::{c_char, c_void, size_t};
 
 #[no_mangle]
+pub extern "C" fn observation_id_new(id: u32) -> *mut ObservationID {
+    unimplemented!()
+}
+
+#[no_mangle]
 pub extern "C" fn observation_id_get_network_ip(observation_id_ptr: *const ObservationID,
                                                 ip: [u8; 16])
                                                 -> *const c_char {
@@ -77,6 +82,17 @@ pub extern "C" fn observation_id_want_target_dns(observation_id_ptr: *const Obse
 }
 
 #[no_mangle]
+pub extern "C" fn observation_id_is_exporter_in_wan_side(observation_id_ptr: *const ObservationID)
+                                                         -> bool {
+    unimplemented!()
+}
+
+#[no_mangle]
+pub extern "C" fn observation_id_is_span(observation_id_ptr: *const ObservationID) -> bool {
+    unimplemented!()
+}
+
+#[no_mangle]
 pub extern "C" fn observation_id_add_template(observation_id_ptr: *const ObservationID,
                                               tmpl: *const c_void) {
     unimplemented!()
@@ -105,7 +121,7 @@ pub extern "C" fn observation_id_add_selector_id(observation_id_ptr: *const Obse
 }
 
 #[no_mangle]
-pub extern "C" fn observation_id_add_interface(observation_id_ptr: *const ObservationID,
+pub extern "C" fn observation_id_add_interface(observation_id_ptr: *mut ObservationID,
                                                interface_id: u64,
                                                interface_name: *const c_char,
                                                interface_name_len: size_t,
@@ -115,12 +131,34 @@ pub extern "C" fn observation_id_add_interface(observation_id_ptr: *const Observ
 }
 
 #[no_mangle]
-pub extern "C" fn observation_id_is_exporter_in_wan_side(observation_id_ptr: *const ObservationID)
-                                                         -> bool {
+pub extern "C" fn observation_id_set_enrichment(bservation_id_ptr: *mut ObservationID,
+                                                enrichment: *const c_char) {
     unimplemented!()
 }
 
 #[no_mangle]
-pub extern "C" fn observation_id_is_span(observation_id_ptr: *const ObservationID) -> bool {
+pub extern "C" fn observation_id_set_exporter_in_wan_side(observation_id_ptr: *mut ObservationID) {
+    unimplemented!()
+}
+
+#[no_mangle]
+pub extern "C" fn observation_id_set_span_mode(observation_id_ptr: *mut ObservationID) {
+    unimplemented!()
+}
+
+
+#[no_mangle]
+pub extern "C" fn observation_id_set_fallback_first_switch(observation_id_ptr: *mut ObservationID,
+                                                           fallback_first_switch: i64) {
+    unimplemented!()
+}
+
+#[no_mangle]
+pub extern "C" fn observation_id_enable_ptr_dns_client(observation_id_ptr: *mut ObservationID) {
+    unimplemented!()
+}
+
+#[no_mangle]
+pub extern "C" fn observation_id_enable_ptr_dns_target(observation_id_ptr: *mut ObservationID) {
     unimplemented!()
 }
