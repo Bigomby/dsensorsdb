@@ -1,3 +1,5 @@
+pub mod bindings;
+
 use observation_id::ObservationID;
 use network::{NetAddress, IPAddress};
 use std::collections::HashMap;

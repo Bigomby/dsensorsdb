@@ -1,3 +1,5 @@
+pub mod bindings;
+
 use application::Application;
 use network::{IPAddress, Network};
 use libc::c_void;
