@@ -26,7 +26,7 @@ impl SensorsDB {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use super::network::{IPAddress, NetAddress};
+    use network::{IPAddress, NetAddress};
 
     const TEST_NETWORK: IPAddress = [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
                                      0x01, 0x00, 0x01, 0x02, 0x03, 0x04];
