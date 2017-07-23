@@ -1,12 +1,13 @@
 pub mod bindings;
 
-use std::collections::HashMap;
-
 use sensor::Sensor;
+
+use std::collections::HashMap;
+use std::net::IpAddr;
 
 #[derive(Default)]
 pub struct SensorsDB {
-    database: HashMap<u32, Sensor>,
+    database: HashMap<IpAddr, Sensor>,
 }
 
 impl SensorsDB {
@@ -14,44 +15,43 @@ impl SensorsDB {
         SensorsDB::default()
     }
 
-    pub fn get_sensor(&self, ip: u32) -> Option<&Sensor> {
+    pub fn get_sensor(&self, ip: IpAddr) -> Option<&Sensor> {
         self.database.get(&ip)
     }
 
-    pub fn add_sensor(&mut self, ip: u32, sensor: Sensor) {
-        self.database.insert(ip, sensor);
+    pub fn add_sensor(&mut self, sensor: Sensor) {
+        self.database.insert(sensor.get_ip(), sensor);
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use network::{IPAddress, NetAddress};
+    use std::net::{IpAddr, Ipv6Addr};
 
-    const TEST_NETWORK: IPAddress = [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
-                                     0x01, 0x00, 0x01, 0x02, 0x03, 0x04];
-    const TEST_NETWORK_MASK: IPAddress = [0x0, 0x0, 0x0, 0x00, 0x03, 0x00, 0x04, 0x00, 0x05, 0x00,
-                                          0x06, 0x00, 0x07, 0x00, 0x08, 0x00];
-    const TEST_BROADCAST: IPAddress = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+    const TEST_NETWORK_1: [u8; 16] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 192, 168, 1, 1];
+    const TEST_NETWORK_2: [u8; 16] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 192, 168, 1, 2];
 
     #[test]
-    fn test_database() {
+    fn test_add_sensors() {
         let mut database = SensorsDB::new();
 
-        let home_net = NetAddress::new(TEST_NETWORK, TEST_NETWORK_MASK, TEST_BROADCAST);
-        let sensor_1 = Sensor::new(home_net);
-        let sensor_2 = Sensor::new(home_net);
+        let sensor_1 = Sensor::new(IpAddr::from(TEST_NETWORK_1));
+        let sensor_2 = Sensor::new(IpAddr::from(TEST_NETWORK_2));
 
-        database.add_sensor(123, sensor_1);
-        database.add_sensor(456, sensor_2);
+        database.add_sensor(sensor_1);
+        database.add_sensor(sensor_2);
 
-        let sensor_in_db_1 = database.get_sensor(123);
-        let sensor_in_db_2 = database.get_sensor(456);
-        let sensor_in_db_3 = database.get_sensor(789);
+        let ip_str_1: Ipv6Addr = "::192.168.1.1".parse().unwrap();
+        let ip_str_2: Ipv6Addr = "::192.168.1.2".parse().unwrap();
+        let ip_str_3: Ipv6Addr = "::192.168.1.3".parse().unwrap();
 
-        assert_eq!(home_net, sensor_in_db_1.unwrap().get_address());
-        assert_eq!(home_net, sensor_in_db_2.unwrap().get_address());
+        let sensor_in_db_1 = database.get_sensor(IpAddr::from(Ipv6Addr::from(ip_str_1)));
+        let sensor_in_db_2 = database.get_sensor(IpAddr::from(Ipv6Addr::from(ip_str_2)));
+        let sensor_in_db_3 = database.get_sensor(IpAddr::from(Ipv6Addr::from(ip_str_3)));
+
+        assert!(sensor_in_db_1.is_some());
+        assert!(sensor_in_db_2.is_some());
         assert!(sensor_in_db_3.is_none());
     }
 }

@@ -3,6 +3,7 @@ use sensor::Sensor;
 
 use libc::c_int;
 use std::ptr;
+use std::net::{IpAddr, Ipv4Addr};
 
 #[no_mangle]
 pub extern "C" fn sensors_db_new() -> *mut SensorsDB {
@@ -25,14 +26,16 @@ pub extern "C" fn sensors_db_get(database_ptr: *const SensorsDB, ip: u32) -> *co
         &*database_ptr
     };
 
-    match database.get_sensor(ip) {
+    let ip_addresss = IpAddr::from(Ipv4Addr::from(ip));
+
+    match database.get_sensor(ip_addresss) {
         Some(sensor) => &*sensor,
         None => ptr::null(),
     }
 }
 
 #[no_mangle]
-pub extern "C" fn sensors_db_add(database_ptr: *mut SensorsDB, ip: u32, sensor_ptr: *mut Sensor) {
+pub extern "C" fn sensors_db_add(database_ptr: *mut SensorsDB, sensor_ptr: *mut Sensor) {
     let database = unsafe {
         assert!(!database_ptr.is_null());
         &mut *database_ptr
@@ -43,7 +46,7 @@ pub extern "C" fn sensors_db_add(database_ptr: *mut SensorsDB, ip: u32, sensor_p
 
     let sensor = unsafe { Box::from_raw(sensor_ptr) };
 
-    database.add_sensor(ip, *sensor);
+    database.add_sensor(*sensor);
 }
 
 #[no_mangle]

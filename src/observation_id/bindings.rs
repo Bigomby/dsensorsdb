@@ -1,10 +1,13 @@
 use observation_id::ObservationID;
 
 use libc::{c_char, c_void, size_t};
+use std::ffi::CStr;
+use std::ptr;
+use std::net::IpAddr;
 
 #[no_mangle]
 pub extern "C" fn observation_id_new(id: u32) -> *mut ObservationID {
-    unimplemented!()
+    Box::into_raw(Box::new(ObservationID::new(id)))
 }
 
 #[no_mangle]
@@ -23,7 +26,20 @@ pub extern "C" fn observation_id_get_id(observation_id_ptr: *const ObservationID
 pub extern "C" fn observation_id_get_network_name(observation_id_ptr: *const ObservationID,
                                                   ip: [u8; 16])
                                                   -> *const c_char {
-    unimplemented!()
+    let observation_id = unsafe {
+        assert!(!observation_id_ptr.is_null());
+        &*observation_id_ptr
+    };
+
+    let ip_address = IpAddr::from(ip);
+
+    match observation_id.get_network(ip_address) {
+        Some(network) => {
+            let name = network.get_name();
+            name.as_ptr() as *const i8
+        }
+        None => ptr::null(),
+    }
 }
 
 #[no_mangle]
@@ -131,14 +147,25 @@ pub extern "C" fn observation_id_add_interface(observation_id_ptr: *mut Observat
 }
 
 #[no_mangle]
-pub extern "C" fn observation_id_set_enrichment(bservation_id_ptr: *mut ObservationID,
+pub extern "C" fn observation_id_set_enrichment(observation_id_ptr: *mut ObservationID,
                                                 enrichment: *const c_char) {
-    unimplemented!()
+    let observation_id = unsafe {
+        assert!(!observation_id_ptr.is_null());
+        &mut *observation_id_ptr
+    };
+
+    let enrichment_str = unsafe { CStr::from_ptr(enrichment) };
+    observation_id.set_enrichment(enrichment_str.to_bytes());
 }
 
 #[no_mangle]
 pub extern "C" fn observation_id_set_exporter_in_wan_side(observation_id_ptr: *mut ObservationID) {
-    unimplemented!()
+    let observation_id = unsafe {
+        assert!(!observation_id_ptr.is_null());
+        &mut *observation_id_ptr
+    };
+
+    observation_id.set_exporter_in_wan_side();
 }
 
 #[no_mangle]
@@ -150,7 +177,12 @@ pub extern "C" fn observation_id_set_span_mode(observation_id_ptr: *mut Observat
 #[no_mangle]
 pub extern "C" fn observation_id_set_fallback_first_switch(observation_id_ptr: *mut ObservationID,
                                                            fallback_first_switch: i64) {
-    unimplemented!()
+    let observation_id = unsafe {
+        assert!(!observation_id_ptr.is_null());
+        &mut *observation_id_ptr
+    };
+
+    observation_id.set_fallback_first_switch(fallback_first_switch);
 }
 
 #[no_mangle]
@@ -160,5 +192,10 @@ pub extern "C" fn observation_id_enable_ptr_dns_client(observation_id_ptr: *mut 
 
 #[no_mangle]
 pub extern "C" fn observation_id_enable_ptr_dns_target(observation_id_ptr: *mut ObservationID) {
-    unimplemented!()
+    let observation_id = unsafe {
+        assert!(!observation_id_ptr.is_null());
+        &mut *observation_id_ptr
+    };
+
+    observation_id.enable_ptr_dns_target();
 }
