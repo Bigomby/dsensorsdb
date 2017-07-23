@@ -4,11 +4,9 @@ use observation_id::ObservationID;
 use libc::{c_char, c_void};
 use std::net::IpAddr;
 
-pub type CIPAddress = [u8; 16];
-
 #[no_mangle]
-pub extern "C" fn sensor_new(ip: CIPAddress) -> *mut Sensor {
-    let ip_addresss = IpAddr::from(ip);
+pub extern "C" fn sensor_new(ip: &[u8; 16]) -> *mut Sensor {
+    let ip_addresss = IpAddr::from(*ip);
     Box::into_raw(Box::new(Sensor::new(ip_addresss)))
 }
 
@@ -90,7 +88,7 @@ mod tests {
     #[test]
     fn test_name() {
         let c_ip_address = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 192, 168, 1, 1];
-        let sensor = unsafe { &*sensor_new(c_ip_address) };
+        let sensor = unsafe { &*sensor_new(&c_ip_address) };
 
         let ip_str: Ipv6Addr = "::192.168.1.1".parse().unwrap();
         let ip_address = sensor.get_ip();

@@ -26,7 +26,7 @@ pub extern "C" fn sensors_db_get(database_ptr: *const SensorsDB, ip: u32) -> *co
         &*database_ptr
     };
 
-    let ip_addresss = IpAddr::from(Ipv4Addr::from(ip));
+    let ip_addresss = IpAddr::from(Ipv4Addr::from(ip).to_ipv6_mapped());
 
     match database.get_sensor(ip_addresss) {
         Some(sensor) => &*sensor,
