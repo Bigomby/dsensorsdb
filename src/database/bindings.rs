@@ -1,7 +1,6 @@
 use database::SensorsDB;
 use sensor::Sensor;
 
-use libc::c_int;
 use std::ptr;
 use std::net::{IpAddr, Ipv4Addr};
 
@@ -47,9 +46,4 @@ pub extern "C" fn sensors_db_add(database_ptr: *mut SensorsDB, sensor_ptr: *mut 
     let sensor = unsafe { Box::from_raw(sensor_ptr) };
 
     database.add_sensor(*sensor);
-}
-
-#[no_mangle]
-pub extern "C" fn sensors_db_add_bad_sensor(database_ptr: *mut SensorsDB, sensor_ip: u64) -> c_int {
-    unimplemented!()
 }

@@ -2,6 +2,7 @@ use sensor::Sensor;
 use observation_id::ObservationID;
 
 use libc::{c_char, c_void};
+use std::ptr;
 use std::net::IpAddr;
 
 #[no_mangle]
@@ -36,10 +37,31 @@ pub extern "C" fn sensor_get_ip(sensor_ptr: *const Sensor) -> u32 {
 }
 
 #[no_mangle]
-pub extern "C" fn sensor_get_observation_id(sensor_ptr: *const Sensor,
+pub extern "C" fn sensor_get_observation_id(sensor_ptr: *mut Sensor,
                                             id: u32)
                                             -> *mut ObservationID {
-    unimplemented!()
+    let sensor = unsafe {
+        assert!(!sensor_ptr.is_null());
+        &mut *sensor_ptr
+    };
+
+    match sensor.get_observation_id(id) {
+        Some(observation_id) => observation_id as *mut ObservationID,
+        None => ptr::null_mut(),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn sensor_get_default_observation_id(sensor_ptr: *mut Sensor) -> *mut ObservationID {
+    let sensor = unsafe {
+        assert!(!sensor_ptr.is_null());
+        &mut *sensor_ptr
+    };
+
+    match sensor.get_default_observation_id() {
+        Some(observation_id) => observation_id as *mut ObservationID,
+        None => ptr::null_mut(),
+    }
 }
 
 #[no_mangle]
@@ -71,18 +93,27 @@ pub extern "C" fn sensor_add_observation_id(sensor_ptr: *mut Sensor,
     };
 
     let observation_id = unsafe {
-        assert!(!sensor_ptr.is_null());
+        assert!(!observation_id_ptr.is_null());
         Box::from_raw(observation_id_ptr)
     };
 
-    sensor.add_observations_id(*observation_id);
+    sensor.add_observation_id(*observation_id);
 }
 
 #[no_mangle]
-pub extern "C" fn sensor_add_default_observation_id(sensor_ptr: *const Sensor,
-                                                    id: u32,
-                                                    observation_id: *mut ObservationID) {
-    unimplemented!()
+pub extern "C" fn sensor_add_default_observation_id(sensor_ptr: *mut Sensor,
+                                                    observation_id_ptr: *mut ObservationID) {
+    let sensor = unsafe {
+        assert!(!sensor_ptr.is_null());
+        &mut *sensor_ptr
+    };
+
+    let observation_id = unsafe {
+        assert!(!observation_id_ptr.is_null());
+        Box::from_raw(observation_id_ptr)
+    };
+
+    sensor.add_default_observation_id(*observation_id);
 }
 
 #[cfg(test)]

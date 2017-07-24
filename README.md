@@ -61,8 +61,8 @@ The public API docs are available in the
 
 ## Roadmap
 
-- [ ] Database module
-- [ ] Sensor module
+- [x] Database module
+- [x] Sensor module
 - [ ] Observation ID module
 - [ ] REST API module
 - [ ] Persistence (etcd, redis, kafka, etc.)

@@ -37,8 +37,9 @@ const char *sensor_get_ip_string(const sensor_t *sensor);
 
 uint32_t sensor_get_ip(const sensor_t *sensor);
 
-observation_id_t *sensor_get_observation_id(const sensor_t *sensor,
-                                            uint32_t id);
+observation_id_t *sensor_get_observation_id(sensor_t *sensor, uint32_t id);
+
+observation_id_t *sensor_get_default_observation_id(sensor_t *sensor);
 
 void *sensor_get_worker(const sensor_t *sensor);
 
