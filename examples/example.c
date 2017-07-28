@@ -1,38 +1,40 @@
-#include <dsensorsdb.h>
 #include <assert.h>
+#include <dsensorsdb.h>
+#include <stdlib.h>
+#include <string.h>
 
-net_address_t address = {
-    .network_address = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4},
-    .network_mask = {4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    .broadcast = {0, 0, 0, 0, 0, 0, 1, 2, 2, 1, 0, 0, 0, 0, 0, 0},
-};
-
-void assert_eq_address(net_address_t addr1, net_address_t addr2) {
-  for (int i = 0; i < 16; i++) {
-    assert(addr1.network_address[i] == addr2.network_address[i]);
-    assert(addr1.network_mask[i] == addr2.network_mask[i]);
-    assert(addr1.broadcast[i] == addr2.broadcast[i]);
-  }
-}
+const uint8_t sample_data[128] = {0};
 
 int main() {
-  sensors_db_t *database = sensors_db_new();
-  assert(database);
+  uint8_t address[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 1, 2, 3, 4};
+  uint8_t *template = calloc(128, sizeof(uint8_t));
+
+  memcpy(template, sample_data, 128);
+
+  observation_id_t *observation_id = observation_id_new(123);
+  assert(observation_id);
 
   sensor_t *sensor = sensor_new(address);
   assert(sensor);
 
-  sensors_db_add(database, 1234, sensor);
+  sensors_db_t *database = sensors_db_new();
+  assert(database);
 
-  sensor_t *missing_sensor = sensors_db_get(database, 5678);
-  assert(!missing_sensor);
+  observation_id_add_template(observation_id, 42, template);
+  sensor_add_observation_id(sensor, observation_id);
+  sensors_db_add(database, sensor);
 
-  sensor_t *same_sensor = sensors_db_get(database, 1234);
+  sensor_t *same_sensor = sensors_db_get(database, 16909060);
   assert(same_sensor);
 
-  net_address_t same_address = sensor_get_address(same_sensor);
-  assert_eq_address(address, same_address);
+  observation_id_t *same_observation_id =
+      sensor_get_observation_id(same_sensor, 123);
+  assert(same_observation_id);
 
+  void *same_template = observation_id_get_template(same_observation_id, 42);
+  assert(same_template);
+
+  free(same_template);
   sensors_db_destroy(database);
 
   return 0;

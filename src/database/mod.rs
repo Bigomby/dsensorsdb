@@ -3,11 +3,10 @@ pub mod bindings;
 use sensor::Sensor;
 
 use std::collections::HashMap;
-use std::net::IpAddr;
 
 #[derive(Default)]
 pub struct SensorsDB {
-    database: HashMap<IpAddr, Sensor>,
+    database: HashMap<u32, Sensor>,
 }
 
 impl SensorsDB {
@@ -15,8 +14,17 @@ impl SensorsDB {
         SensorsDB::default()
     }
 
-    pub fn get_sensor(&self, ip: IpAddr) -> Option<&Sensor> {
+    pub fn get_sensor(&self, ip: u32) -> Option<&Sensor> {
         self.database.get(&ip)
+    }
+
+    pub fn list_sensors(&self) -> Vec<u32> {
+        let mut sensor_ids = Vec::new();
+        for id in self.database.keys() {
+            sensor_ids.push(*id);
+        }
+
+        sensor_ids
     }
 
     pub fn add_sensor(&mut self, sensor: Sensor) {
@@ -27,28 +35,20 @@ impl SensorsDB {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::net::{IpAddr, Ipv6Addr};
-
-    const TEST_NETWORK_1: [u8; 16] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 192, 168, 1, 1];
-    const TEST_NETWORK_2: [u8; 16] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 192, 168, 1, 2];
 
     #[test]
     fn test_add_sensors() {
         let mut database = SensorsDB::new();
 
-        let sensor_1 = Sensor::new(IpAddr::from(TEST_NETWORK_1));
-        let sensor_2 = Sensor::new(IpAddr::from(TEST_NETWORK_2));
+        let sensor_1 = Sensor::new(1234);
+        let sensor_2 = Sensor::new(5678);
 
         database.add_sensor(sensor_1);
         database.add_sensor(sensor_2);
 
-        let ip_str_1: Ipv6Addr = "::192.168.1.1".parse().unwrap();
-        let ip_str_2: Ipv6Addr = "::192.168.1.2".parse().unwrap();
-        let ip_str_3: Ipv6Addr = "::192.168.1.3".parse().unwrap();
-
-        let sensor_in_db_1 = database.get_sensor(IpAddr::from(Ipv6Addr::from(ip_str_1)));
-        let sensor_in_db_2 = database.get_sensor(IpAddr::from(Ipv6Addr::from(ip_str_2)));
-        let sensor_in_db_3 = database.get_sensor(IpAddr::from(Ipv6Addr::from(ip_str_3)));
+        let sensor_in_db_1 = database.get_sensor(1234);
+        let sensor_in_db_2 = database.get_sensor(5678);
+        let sensor_in_db_3 = database.get_sensor(0000);
 
         assert!(sensor_in_db_1.is_some());
         assert!(sensor_in_db_2.is_some());
