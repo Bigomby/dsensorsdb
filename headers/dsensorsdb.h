@@ -14,6 +14,9 @@ typedef struct sensor_s sensor_t;
 typedef struct sensors_db_s sensors_db_t;
 typedef struct observation_id_s observation_id_t;
 typedef struct network_s network_t;
+typedef struct application_s application_t;
+typedef struct interface_s interface_t;
+typedef struct selector_s selector_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Sensors DB
@@ -68,21 +71,21 @@ observation_id_get_network_ip(const observation_id_t *observation_id,
 
 uint32_t observation_id_get_id(const observation_id_t *observation_id);
 
-const char *
-observation_id_get_network_name(const observation_id_t *observation_id,
-                                const uint8_t ip[16]);
+const network_t *
+observation_id_get_network(const observation_id_t *observation_id,
+                           const uint8_t ip[16]);
 
-const char *
-observation_id_get_selector_name(const observation_id_t *observation_id,
-                                 uint64_t selector_id);
+const selector_t *
+observation_id_get_selector(const observation_id_t *observation_id,
+                            uint64_t selector_id);
 
-const char *
-observation_id_get_interface_name(const observation_id_t *observation_id,
-                                  uint64_t interface_id);
+const application_t *
+observation_id_get_application(const observation_id_t *observation_id,
+                               uint64_t application_id);
 
-const char *
-observation_id_get_interface_description(const observation_id_t *observation_id,
-                                         uint64_t interface_id);
+const interface_t *
+observation_id_get_interface(const observation_id_t *observation_id,
+                             uint64_t interface_id);
 
 int64_t observation_id_get_fallback_first_switch(
     const observation_id_t *observation_id);
@@ -92,10 +95,6 @@ uint16_t *observation_id_list_templates(const observation_id_t *observation_id,
 
 void *observation_id_get_template(const observation_id_t *observation_id,
                                   uint16_t template_id);
-
-const char *
-observation_id_get_application_name(const observation_id_t *observation_id,
-                                    uint64_t application_id);
 
 const char *
 observation_id_get_enrichment(const observation_id_t *observation_id);
@@ -112,18 +111,11 @@ bool observation_id_is_span(const observation_id_t *observation_id);
 void observation_id_add_template(observation_id_t *observation_id, uint16_t id,
                                  void *tmpl);
 
-void observation_id_add_template_async(observation_id_t *observation_id,
-                                       void *tmpl);
+void observation_id_add_application(observation_id_t *observation_id,
+                                    const application_t *application);
 
-void observation_id_add_application_id(observation_id_t *observation_id,
-                                       uint64_t application_id,
-                                       const char *application_name,
-                                       size_t application_name_len);
-
-void observation_id_add_selector_id(observation_id_t *observation_id,
-                                    uint64_t selector_id,
-                                    const char *selector_name,
-                                    size_t selector_name_len);
+void observation_id_add_selector(observation_id_t *observation_id,
+                                 const selector_t *selector);
 
 void observation_id_add_interface(observation_id_t *observation_id,
                                   uint64_t interface_id,
@@ -151,6 +143,34 @@ void observation_id_enable_ptr_dns_target(observation_id_t *observation_id);
 ////////////////////////////////////////////////////////////////////////////////
 
 network_t *network_new(net_address_t address, const char *name);
+
+const char *network_get_name(const network_t *network);
+
+////////////////////////////////////////////////////////////////////////////////
+// Interface
+////////////////////////////////////////////////////////////////////////////////
+
+interface_t *interface_new(uint64_t id, const char *name, size_t name_len);
+
+const char *interface_get_name(const interface_t *interface);
+
+const char *interface_get_description(const interface_t *interface);
+
+////////////////////////////////////////////////////////////////////////////////
+// Application
+////////////////////////////////////////////////////////////////////////////////
+
+application_t *application_new(uint64_t id, const char *name, size_t name_len);
+
+const char *application_get_name(const application_t *application);
+
+////////////////////////////////////////////////////////////////////////////////
+// Selector
+////////////////////////////////////////////////////////////////////////////////
+
+selector_t *selector_new(uint64_t id, const char *name, size_t name_len);
+
+const char *selector_get_name(const selector_t *selector);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Util
