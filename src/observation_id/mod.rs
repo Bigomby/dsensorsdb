@@ -1,7 +1,9 @@
 pub mod bindings;
 
 use application::Application;
+use selector::Selector;
 use network::Network;
+use interface::Interface;
 use libc::c_void;
 
 use std::collections::HashMap;
@@ -11,8 +13,10 @@ pub struct ObservationID {
     id: u32,
     enrichment: Option<Vec<u8>>,
     fallback_first_switch: Option<i64>,
-    applications: HashMap<u32, Application>,
+    applications: HashMap<u64, Application>,
     networks: HashMap<IpAddr, Network>,
+    selectors: HashMap<u64, Selector>,
+    interfaces: HashMap<u64, Interface>,
     templates: HashMap<u16, *mut c_void>,
     want_client_dns: bool,
     want_target_dns: bool,
@@ -28,6 +32,8 @@ impl ObservationID {
             fallback_first_switch: None,
             applications: HashMap::new(),
             networks: HashMap::new(),
+            selectors: HashMap::new(),
+            interfaces: HashMap::new(),
             templates: HashMap::new(),
             want_client_dns: false,
             want_target_dns: false,
@@ -67,7 +73,15 @@ impl ObservationID {
         }
     }
 
-    pub fn get_application(&self, id: u32) -> Option<&Application> {
+    pub fn get_selector(&self, id: u64) -> Option<&Selector> {
+        self.selectors.get(&id)
+    }
+
+    pub fn get_interface(&self, id: u64) -> Option<&Interface> {
+        self.interfaces.get(&id)
+    }
+
+    pub fn get_application(&self, id: u64) -> Option<&Application> {
         self.applications.get(&id)
     }
 
@@ -81,6 +95,10 @@ impl ObservationID {
 
     pub fn want_target_dns(&self) -> bool {
         self.want_target_dns
+    }
+
+    pub fn add_selector(&mut self, selector: Selector) {
+        self.selectors.insert(selector.get_id(), selector);
     }
 
     pub fn add_template(&mut self, id: u16, template: *mut c_void) {

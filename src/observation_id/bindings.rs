@@ -1,4 +1,8 @@
 use observation_id::ObservationID;
+use selector::Selector;
+use application::Application;
+use network::Network;
+use interface::Interface;
 
 use libc::{c_char, c_void, size_t};
 use std::ffi::CStr;
@@ -39,10 +43,8 @@ pub extern "C" fn observation_id_get_network_name(
     observation_id_ptr: *const ObservationID,
     ip: [u8; 16],
 ) -> *const c_char {
-    let observation_id = unsafe {
-        assert!(!observation_id_ptr.is_null());
-        &*observation_id_ptr
-    };
+    assert!(!observation_id_ptr.is_null());
+    let observation_id = unsafe { &*observation_id_ptr };
 
     let ip_address = IpAddr::from(ip);
 
@@ -56,11 +58,17 @@ pub extern "C" fn observation_id_get_network_name(
 }
 
 #[no_mangle]
-pub extern "C" fn observation_id_get_selector_name(
+pub extern "C" fn observation_id_get_selector(
     observation_id_ptr: *const ObservationID,
     selector_id: u64,
-) -> *const c_char {
-    unimplemented!()
+) -> *const Selector {
+    assert!(!observation_id_ptr.is_null());
+    let observation_id = unsafe { &*observation_id_ptr };
+
+    match observation_id.get_selector(selector_id) {
+        Some(selector) => selector as *const Selector,
+        None => ptr::null(),
+    }
 }
 
 #[no_mangle]
@@ -101,9 +109,16 @@ pub extern "C" fn observation_id_list_templates(
     let observation_id = unsafe { &*observation_id_ptr };
 
     let mut template_list = observation_id.list_templates().into_boxed_slice();
-    unsafe { *len = template_list.len() as size_t };
-    let sensor_list_raw = template_list.as_mut_ptr();
+    unsafe {
+        if template_list.len() > 0 {
+            *len = template_list.len() as size_t;
+        } else {
+            *len = 0;
+            return ptr::null_mut();
+        }
+    };
 
+    let sensor_list_raw = template_list.as_mut_ptr();
     Box::into_raw(template_list);
     sensor_list_raw
 }
@@ -123,15 +138,44 @@ pub extern "C" fn observation_id_get_template(
 }
 
 #[no_mangle]
-pub extern "C" fn observation_id_get_application_name(
+pub extern "C" fn observation_id_get_application(
     observation_id_ptr: *const ObservationID,
-    application_id: u32,
-) -> *const c_char {
+    application_id: u64,
+) -> *const Application {
     assert!(!observation_id_ptr.is_null());
     let observation_id = unsafe { &*observation_id_ptr };
 
     match observation_id.get_application(application_id) {
-        Some(application) => application.get_name().as_ptr() as *const c_char,
+        Some(application) => application as *const Application,
+        None => ptr::null(),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn observation_id_get_network(
+    observation_id_ptr: *const ObservationID,
+    ip: &[u8; 16],
+) -> *const Network {
+    assert!(!observation_id_ptr.is_null());
+    let observation_id = unsafe { &*observation_id_ptr };
+
+    let ip_address = IpAddr::from(*ip);
+    match observation_id.get_network(ip_address) {
+        Some(network) => network as *const Network,
+        None => ptr::null(),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn observation_id_get_interface(
+    observation_id_ptr: *const ObservationID,
+    interface_id: u64,
+) -> *const Interface {
+    assert!(!observation_id_ptr.is_null());
+    let observation_id = unsafe { &*observation_id_ptr };
+
+    match observation_id.get_interface(interface_id) {
+        Some(interface) => interface as *const Interface,
         None => ptr::null(),
     }
 }
@@ -192,15 +236,7 @@ pub extern "C" fn observation_id_add_template(
 }
 
 #[no_mangle]
-pub extern "C" fn observation_id_add_template_async(
-    observation_id_ptr: *const ObservationID,
-    tmpl: *const c_void,
-) {
-    unimplemented!()
-}
-
-#[no_mangle]
-pub extern "C" fn observation_id_add_application_id(
+pub extern "C" fn observation_id_add_application(
     observation_id_ptr: *const ObservationID,
     application_id: u64,
     application_name: *const c_char,
@@ -210,13 +246,15 @@ pub extern "C" fn observation_id_add_application_id(
 }
 
 #[no_mangle]
-pub extern "C" fn observation_id_add_selector_id(
-    observation_id_ptr: *const ObservationID,
-    selector_id: u64,
-    selector_name: *const c_char,
-    selector_name_len: size_t,
+pub extern "C" fn observation_id_add_selector(
+    observation_id_ptr: *mut ObservationID,
+    selector_ptr: *mut Selector,
 ) {
-    unimplemented!()
+    assert!(!observation_id_ptr.is_null());
+    let mut observation_id = unsafe { &mut *observation_id_ptr };
+    let selector = unsafe { Box::from_raw(selector_ptr) };
+
+    observation_id.add_selector(*selector);
 }
 
 #[no_mangle]
