@@ -118,11 +118,7 @@ void observation_id_add_selector(observation_id_t *observation_id,
                                  const selector_t *selector);
 
 void observation_id_add_interface(observation_id_t *observation_id,
-                                  uint64_t interface_id,
-                                  const char *interface_name,
-                                  size_t interface_name_len,
-                                  const char *interface_description,
-                                  size_t interface_description_len);
+                                  const interface_t *interface);
 
 void observation_id_set_enrichment(const observation_id_t *observation_id,
                                    const char *enrichment);
@@ -150,7 +146,8 @@ const char *network_get_name(const network_t *network);
 // Interface
 ////////////////////////////////////////////////////////////////////////////////
 
-interface_t *interface_new(uint64_t id, const char *name, size_t name_len);
+interface_t *interface_new(uint64_t id, const char *name, size_t name_len,
+                           const char *description, size_t description_len);
 
 const char *interface_get_name(const interface_t *interface);
 
