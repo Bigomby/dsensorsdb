@@ -3,11 +3,10 @@ use application::Application;
 use libc::{size_t, c_char};
 
 #[no_mangle]
-pub extern "C" fn application_new(
-    id: u64,
-    name_ptr: *mut u8,
-    name_len: size_t,
-) -> *mut Application {
+pub extern "C" fn application_new(id: u64,
+                                  name_ptr: *mut u8,
+                                  name_len: size_t)
+                                  -> *mut Application {
     assert!(!name_ptr.is_null());
 
     let mut name = Vec::with_capacity(name_len + 1);

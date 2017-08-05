@@ -2,47 +2,29 @@ use sensor::Sensor;
 use observation_id::ObservationID;
 
 use libc::{c_char, c_void, size_t};
+use std::net::IpAddr;
 use std::ptr;
 
+
 #[no_mangle]
-pub extern "C" fn sensor_new(ip: &[u8; 16]) -> *mut Sensor {
-    if ip[11] != 0xFF || ip[10] != 0xFF {
-        panic!("Unsupported IPv6 address")
-    }
-
-    let a = (ip[12] as u32) << 24;
-    let b = (ip[13] as u32) << 16;
-    let c = (ip[14] as u32) << 8;
-    let d = ip[15] as u32;
-
-    Box::into_raw(Box::new(Sensor::new(a + b + c + d)))
+pub extern "C" fn sensor_new(network: &[u8; 16], netmask: &[u8; 16]) -> *mut Sensor {
+    Box::into_raw(Box::new(Sensor::new(IpAddr::from(*network), IpAddr::from(*netmask))))
 }
 
 #[no_mangle]
-pub extern "C" fn sensor_get_ip_string(sensor_ptr: *const Sensor) -> *const c_char {
+pub extern "C" fn sensor_get_network_string(sensor_ptr: *const Sensor) -> *const c_char {
     let sensor = unsafe {
         assert!(!sensor_ptr.is_null());
         &*sensor_ptr
     };
 
-    sensor.get_ip_string().as_ptr() as *const i8
+    sensor.get_network_string().as_ptr() as *const i8
 }
 
 #[no_mangle]
-pub extern "C" fn sensor_get_ip(sensor_ptr: *const Sensor) -> u32 {
-    let sensor = unsafe {
-        assert!(!sensor_ptr.is_null());
-        &*sensor_ptr
-    };
-
-    sensor.get_ip()
-}
-
-#[no_mangle]
-pub extern "C" fn sensor_get_observation_id_list(
-    sensor_ptr: *const Sensor,
-    len: *mut size_t,
-) -> *mut u32 {
+pub extern "C" fn sensor_get_observation_id_list(sensor_ptr: *const Sensor,
+                                                 len: *mut size_t)
+                                                 -> *mut u32 {
     assert!(!sensor_ptr.is_null());
     let sensor = unsafe { &*sensor_ptr };
 
@@ -55,10 +37,9 @@ pub extern "C" fn sensor_get_observation_id_list(
 }
 
 #[no_mangle]
-pub extern "C" fn sensor_get_observation_id(
-    sensor_ptr: *mut Sensor,
-    id: u32,
-) -> *mut ObservationID {
+pub extern "C" fn sensor_get_observation_id(sensor_ptr: *mut Sensor,
+                                            id: u32)
+                                            -> *mut ObservationID {
     let sensor = unsafe {
         assert!(!sensor_ptr.is_null());
         &mut *sensor_ptr
@@ -77,9 +58,7 @@ pub extern "C" fn sensor_get_worker(sensor_ptr: *const Sensor) -> *mut c_void {
         &*sensor_ptr
     };
 
-    sensor.get_worker().expect(
-        "No worker associated to the sensor",
-    )
+    sensor.get_worker().expect("No worker associated to the sensor")
 }
 
 #[no_mangle]
@@ -93,10 +72,8 @@ pub extern "C" fn sensor_set_worker(sensor_ptr: *mut Sensor, worker: *mut c_void
 }
 
 #[no_mangle]
-pub extern "C" fn sensor_add_observation_id(
-    sensor_ptr: *mut Sensor,
-    observation_id_ptr: *mut ObservationID,
-) {
+pub extern "C" fn sensor_add_observation_id(sensor_ptr: *mut Sensor,
+                                            observation_id_ptr: *mut ObservationID) {
     let sensor = unsafe {
         assert!(!sensor_ptr.is_null());
         &mut *sensor_ptr
@@ -111,10 +88,8 @@ pub extern "C" fn sensor_add_observation_id(
 }
 
 #[no_mangle]
-pub extern "C" fn sensor_add_default_observation_id(
-    sensor_ptr: *mut Sensor,
-    observation_id_ptr: *mut ObservationID,
-) {
+pub extern "C" fn sensor_add_default_observation_id(sensor_ptr: *mut Sensor,
+                                                    observation_id_ptr: *mut ObservationID) {
     let sensor = unsafe {
         assert!(!sensor_ptr.is_null());
         &mut *sensor_ptr
@@ -134,10 +109,11 @@ mod tests {
 
     #[test]
     fn test_sensor_new() {
-        let c_ip_address: [u8; 16] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 192, 168, 1, 1];
-        let sensor = unsafe { &*sensor_new(&c_ip_address) };
-        let ip_address = sensor.get_ip_string();
+        let ip_address: [u8; 16] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 192, 168, 1, 125];
+        let netmask: [u8; 16] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 1];
+        let sensor = unsafe { &*sensor_new(&ip_address, &netmask) };
+        let ip_address = sensor.get_network_string();
 
-        assert_eq!("192.168.1.1", ip_address);
+        assert_eq!("192.168.1.125", ip_address);
     }
 }

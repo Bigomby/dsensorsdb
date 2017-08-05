@@ -3,13 +3,12 @@ use interface::Interface;
 use libc::{size_t, c_char};
 
 #[no_mangle]
-pub extern "C" fn interface_new(
-    id: u64,
-    name_ptr: *mut u8,
-    name_len: size_t,
-    description_ptr: *mut u8,
-    description_len: size_t,
-) -> *mut Interface {
+pub extern "C" fn interface_new(id: u64,
+                                name_ptr: *mut u8,
+                                name_len: size_t,
+                                description_ptr: *mut u8,
+                                description_len: size_t)
+                                -> *mut Interface {
     assert!(!name_ptr.is_null());
     assert!(!description_ptr.is_null());
 

@@ -3,6 +3,7 @@ use sensor::Sensor;
 
 use libc::size_t;
 use std::ptr;
+use std::net::IpAddr;
 
 #[no_mangle]
 pub extern "C" fn sensors_db_new() -> *mut SensorsDB {
@@ -19,24 +20,34 @@ pub extern "C" fn sensors_db_destroy(database_ptr: *mut SensorsDB) {
 }
 
 #[no_mangle]
-pub extern "C" fn sensors_db_list(database_ptr: *const SensorsDB, len: *mut size_t) -> *mut u32 {
+pub extern "C" fn sensors_db_list(database_ptr: *const SensorsDB,
+                                  len: *mut size_t)
+                                  -> *mut *const Sensor {
     assert!(!database_ptr.is_null());
     let database = unsafe { &*database_ptr };
 
-    let mut sensor_list = database.list_sensors().into_boxed_slice();
-    unsafe { *len = sensor_list.len() as size_t };
-    let sensor_list_raw = sensor_list.as_mut_ptr();
+    let sensor_list = database.list_sensors();
+    let mut sensors_ptrs = Vec::new();
+    for sensor in sensor_list {
+        sensors_ptrs.push(sensor as *const Sensor);
+    }
 
-    Box::into_raw(sensor_list);
-    sensor_list_raw
+    unsafe { *len = sensors_ptrs.len() as size_t };
+    let mut raw_slice = sensors_ptrs.into_boxed_slice();
+    let raw_ptr = raw_slice.as_mut_ptr();
+    Box::into_raw(raw_slice);
+
+    raw_ptr
 }
 
 #[no_mangle]
-pub extern "C" fn sensors_db_get(database_ptr: *const SensorsDB, ip: u32) -> *const Sensor {
+pub extern "C" fn sensors_db_get(database_ptr: *const SensorsDB,
+                                 network: &[u8; 16])
+                                 -> *const Sensor {
     assert!(!database_ptr.is_null());
     let database = unsafe { &*database_ptr };
 
-    match database.get_sensor(ip) {
+    match database.get_sensor(IpAddr::from(*network)) {
         Some(sensor) => &*sensor,
         None => ptr::null(),
     }
