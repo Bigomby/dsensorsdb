@@ -7,7 +7,10 @@ pub struct Selector {
 
 impl Selector {
     pub fn new(id: u64, name: Vec<u8>) -> Self {
-        Selector { id: id, name: name }
+        Selector {
+            id: id,
+            name: name,
+        }
     }
 
     pub fn get_id(&self) -> u64 {

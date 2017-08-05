@@ -1,35 +1,53 @@
 pub mod bindings;
 
 use observation_id::ObservationID;
+use util::{apply_netmask, v6_to_v4};
+
 use std::collections::HashMap;
 use libc::c_void;
-use std::net::Ipv4Addr;
+use std::net::IpAddr;
 
 pub struct Sensor {
-    address: u32,
-    str_address: String,
+    network: IpAddr,
+    netmask: IpAddr,
+    str_network: String,
     worker: Option<*mut c_void>,
     default_observation_id: Option<ObservationID>,
     observation_id: HashMap<u32, ObservationID>,
 }
 
 impl Sensor {
-    pub fn new(address: u32) -> Self {
+    pub fn new(network: IpAddr, netmask: IpAddr) -> Self {
+        let (network, netmask) = if let IpAddr::V6(ipv6) = network {
+            match ipv6.to_ipv4() {
+                Some(ipv4) => (IpAddr::from(ipv4), v6_to_v4(&netmask)),
+                None => (IpAddr::from(ipv6), netmask),
+            }
+        } else {
+            (network, v6_to_v4(&netmask))
+        };
+
+        apply_netmask(&network, &netmask);
         Sensor {
-            address: address,
-            str_address: format!("{}", Ipv4Addr::from(address)),
+            network: apply_netmask(&network, &netmask),
+            netmask: netmask,
+            str_network: format!("{}", IpAddr::from(network)),
             worker: None,
             default_observation_id: None,
             observation_id: HashMap::new(),
         }
     }
 
-    pub fn get_ip(&self) -> u32 {
-        self.address
+    pub fn get_network(&self) -> IpAddr {
+        self.network
     }
 
-    pub fn get_ip_string(&self) -> &str {
-        &self.str_address
+    pub fn get_netmask(&self) -> IpAddr {
+        self.netmask
+    }
+
+    pub fn get_network_string(&self) -> &str {
+        &self.str_network
     }
 
     pub fn get_worker(&self) -> Option<*mut c_void> {
@@ -64,10 +82,7 @@ impl Sensor {
     }
 
     pub fn add_observation_id(&mut self, observation_id: ObservationID) {
-        self.observation_id.insert(
-            observation_id.get_id(),
-            observation_id,
-        );
+        self.observation_id.insert(observation_id.get_id(), observation_id);
     }
 
     pub fn add_default_observation_id(&mut self, observation_id: ObservationID) {
@@ -78,19 +93,20 @@ impl Sensor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::net::Ipv6Addr;
+    use std::net::Ipv4Addr;
 
-    // #[test]
+    #[test]
     fn create_sensor_with_ipv4() {
-        let sensor = Sensor::new(1234);
-        let ip_address = sensor.get_ip();
-
-        assert_eq!(123, ip_address);
+        let sensor = Sensor::new(IpAddr::from(Ipv4Addr::from(3232235901)),
+                                 IpAddr::from(Ipv4Addr::from(0xFFFFFF00)));
+        let network = sensor.get_network();
+        assert_eq!("192.168.1.0", format!("{}", network));
     }
 
     #[test]
     fn add_observation_ids() {
-        let mut sensor = Sensor::new(1234);
+        let mut sensor = Sensor::new(IpAddr::from(Ipv4Addr::from(3232235901)),
+                                     IpAddr::from(Ipv4Addr::from(0xFFFFFF00)));
 
         let observation_id_1 = ObservationID::new(0);
         let observation_id_2 = ObservationID::new(123);

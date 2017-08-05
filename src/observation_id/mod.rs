@@ -4,8 +4,9 @@ use application::Application;
 use selector::Selector;
 use network::Network;
 use interface::Interface;
-use libc::c_void;
+use util::apply_netmask;
 
+use libc::c_void;
 use std::collections::HashMap;
 use std::net::IpAddr;
 
@@ -21,7 +22,9 @@ pub struct ObservationID {
     want_client_dns: bool,
     want_target_dns: bool,
     ptr_dns_target: bool,
+    ptr_dns_client: bool,
     exporter_in_wan_side: bool,
+    span_port: bool,
 }
 
 impl ObservationID {
@@ -38,7 +41,9 @@ impl ObservationID {
             want_client_dns: false,
             want_target_dns: false,
             ptr_dns_target: false,
+            ptr_dns_client: false,
             exporter_in_wan_side: false,
+            span_port: false,
         }
     }
 
@@ -47,7 +52,27 @@ impl ObservationID {
     }
 
     pub fn get_network(&self, ip: IpAddr) -> Option<&Network> {
-        self.networks.get(&ip)
+        let ip = if let IpAddr::V6(ipv6) = ip {
+            match ipv6.to_ipv4() {
+                Some(ipv4) => IpAddr::from(ipv4),
+                None => IpAddr::from(ipv6),
+            }
+        } else {
+            ip
+        };
+
+        for home_net in self.networks.values() {
+
+            if ip.is_ipv4() && home_net.get_netmask().is_ipv4() ||
+               ip.is_ipv6() && home_net.get_netmask().is_ipv6() {
+                let network = apply_netmask(&ip, &home_net.get_netmask());
+                if let Some(network) = self.networks.get(&network) {
+                    return Some(network);
+                };
+            }
+        }
+
+        None
     }
 
     pub fn list_templates(&self) -> Vec<u16> {
@@ -97,8 +122,28 @@ impl ObservationID {
         self.want_target_dns
     }
 
+    pub fn is_exporter_in_wan_side(&self) -> bool {
+        self.exporter_in_wan_side
+    }
+
+    pub fn is_span_port(&self) -> bool {
+        self.span_port
+    }
+
     pub fn add_selector(&mut self, selector: Selector) {
         self.selectors.insert(selector.get_id(), selector);
+    }
+
+    pub fn add_application(&mut self, application: Application) {
+        self.applications.insert(application.get_id(), application);
+    }
+
+    pub fn add_interface(&mut self, interface: Interface) {
+        self.interfaces.insert(interface.get_id(), interface);
+    }
+
+    pub fn add_network(&mut self, network: Network) {
+        self.networks.insert(*network.get_ip(), network);
     }
 
     pub fn add_template(&mut self, id: u16, template: *mut c_void) {
@@ -117,14 +162,23 @@ impl ObservationID {
         self.exporter_in_wan_side = true;
     }
 
+    pub fn set_span_mode(&mut self) {
+        self.span_port = true;
+    }
+
     pub fn enable_ptr_dns_target(&mut self) {
         self.ptr_dns_target = true;
+    }
+
+    pub fn enable_ptr_dns_client(&mut self) {
+        self.ptr_dns_client = true;
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::str::FromStr;
 
     #[repr(C)]
     #[derive(Debug, PartialEq)]
@@ -151,12 +205,24 @@ mod tests {
         let tmpl = *template_ref.unwrap() as *mut Template;
 
         unsafe {
-            assert_eq!(
-                (*tmpl).example_data_1,
-                [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-            );
+            assert_eq!((*tmpl).example_data_1,
+                       [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
             assert_eq!((*tmpl).example_data_2, [10, 20, 30, 50]);
             assert_eq!((*tmpl).example_data_3, "Hello world");
         }
+    }
+
+    #[test]
+    fn test_networks() {
+        let mut observation_id = ObservationID::new(1234);
+
+        let network = Network::new(IpAddr::from_str("10.13.30.0").unwrap(),
+                                   IpAddr::from_str("255.255.0.0").unwrap(),
+                                   "test-net");
+
+        observation_id.add_network(network);
+
+        let should_exists = observation_id.get_network(IpAddr::from_str("10.13.30.44").unwrap());
+        assert!(should_exists.is_some());
     }
 }
