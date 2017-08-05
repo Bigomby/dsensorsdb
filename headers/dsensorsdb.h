@@ -4,12 +4,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-typedef struct net_address_s {
-  uint8_t network[16];
-  uint8_t network_mask[16];
-  uint8_t broadcast[16];
-} net_address_t;
-
 typedef struct sensor_s sensor_t;
 typedef struct sensors_db_s sensors_db_t;
 typedef struct observation_id_s observation_id_t;
@@ -26,9 +20,9 @@ sensors_db_t *sensors_db_new();
 
 void sensors_db_destroy(sensors_db_t *db);
 
-uint32_t *sensors_db_list(const sensors_db_t *db, size_t *list_length);
+sensor_t **sensors_db_list(const sensors_db_t *db, size_t *list_length);
 
-sensor_t *sensors_db_get(const sensors_db_t *db, uint32_t ip);
+sensor_t *sensors_db_get(const sensors_db_t *db, const uint8_t network[16]);
 
 void sensors_db_add(sensors_db_t *db, sensor_t *sensor);
 
@@ -36,11 +30,9 @@ void sensors_db_add(sensors_db_t *db, sensor_t *sensor);
 // Sensor
 ////////////////////////////////////////////////////////////////////////////////
 
-sensor_t *sensor_new(uint8_t ip[16]);
+sensor_t *sensor_new(const uint8_t network[16], const uint8_t netmask[16]);
 
-const char *sensor_get_ip_string(const sensor_t *sensor);
-
-uint32_t sensor_get_ip(const sensor_t *sensor);
+const char *sensor_get_network_string(const sensor_t *sensor);
 
 uint32_t *sensor_get_observation_id_list(const sensor_t *sensor,
                                          size_t *list_length);
@@ -64,10 +56,6 @@ void sensor_add_default_observation_id(sensor_t *sensor,
 ////////////////////////////////////////////////////////////////////////////////
 
 observation_id_t *observation_id_new(uint32_t id);
-
-const char *
-observation_id_get_network_ip(const observation_id_t *observation_id,
-                              const uint8_t ip[16]);
 
 uint32_t observation_id_get_id(const observation_id_t *observation_id);
 
@@ -106,7 +94,7 @@ bool observation_id_want_target_dns(const observation_id_t *observation_id);
 bool observation_id_is_exporter_in_wan_side(
     const observation_id_t *observation_id);
 
-bool observation_id_is_span(const observation_id_t *observation_id);
+bool observation_id_is_span_port(const observation_id_t *observation_id);
 
 void observation_id_add_template(observation_id_t *observation_id, uint16_t id,
                                  void *tmpl);
@@ -119,6 +107,9 @@ void observation_id_add_selector(observation_id_t *observation_id,
 
 void observation_id_add_interface(observation_id_t *observation_id,
                                   const interface_t *interface);
+
+void observation_id_add_network(observation_id_t *observation_id,
+                                const network_t *network);
 
 void observation_id_set_enrichment(const observation_id_t *observation_id,
                                    const char *enrichment);
@@ -138,9 +129,12 @@ void observation_id_enable_ptr_dns_target(observation_id_t *observation_id);
 // Network
 ////////////////////////////////////////////////////////////////////////////////
 
-network_t *network_new(net_address_t address, const char *name);
+network_t *network_new(uint8_t network[16], uint8_t netmask[16],
+                       const char *name);
 
 const char *network_get_name(const network_t *network);
+
+const char *network_get_ip_str(const network_t *network);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Interface
@@ -173,8 +167,4 @@ const char *selector_get_name(const selector_t *selector);
 // Util
 ////////////////////////////////////////////////////////////////////////////////
 
-void template_list_free(uint16_t *list);
-
-void observation_id_list_free(uint32_t *list);
-
-void sensor_list_free(uint32_t *list);
+void dsensors_free(void *ptr);
